@@ -27,6 +27,7 @@ import {
   AlertCircle,
   Calendar,
   Clock,
+  Eye,
 } from "lucide-react";
 import { format, isPast, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ interface TaskTableProps {
   loading: boolean;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
+  onView?: (task: Task) => void;
   onRefresh: () => void;
 }
 
@@ -61,6 +63,7 @@ export function TaskTable({
   loading,
   onEdit,
   onDelete,
+  onView,
   onRefresh,
 }: TaskTableProps) {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -123,10 +126,12 @@ export function TaskTable({
               return (
                 <TableRow
                   key={task.id}
+                  onClick={() => onView?.(task)}
                   className={cn(
-                    "transition-colors group",
+                    "transition-colors group cursor-pointer hover:bg-muted/50 dark:hover:bg-muted/30",
                     overdue && "bg-rose-50/40 dark:bg-rose-950/20"
                   )}
+                  title="Click to view full details"
                 >
                   {/* Title & Overdue Warning */}
                   <TableCell className="font-medium align-middle">
@@ -143,7 +148,7 @@ export function TaskTable({
                           </TooltipContent>
                         </Tooltip>
                       )}
-                      <span className="truncate max-w-[280px] font-semibold text-foreground">
+                      <span className="truncate max-w-[280px] font-semibold text-foreground group-hover:text-primary transition-colors">
                         {task.title}
                       </span>
                     </div>
@@ -162,8 +167,8 @@ export function TaskTable({
                     )}
                   </TableCell>
 
-                  {/* Quick Status Dropdown */}
-                  <TableCell className="align-middle">
+                  {/* Quick Status Dropdown (stops propagation so row click isn't triggered) */}
+                  <TableCell className="align-middle" onClick={(e) => e.stopPropagation()}>
                     <Select
                       value={task.status}
                       onValueChange={(val) =>
@@ -203,8 +208,8 @@ export function TaskTable({
                     )}
                   </TableCell>
 
-                  {/* Actions */}
-                  <TableCell className="text-right align-middle">
+                  {/* Actions (stops propagation so row click isn't triggered) */}
+                  <TableCell className="text-right align-middle" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1">
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -212,7 +217,28 @@ export function TaskTable({
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            onClick={() => onEdit(task)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onView?.(task);
+                            }}
+                            aria-label="View task details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>View details</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit(task);
+                            }}
                             aria-label="Edit task"
                           >
                             <Pencil className="h-4 w-4" />
@@ -227,7 +253,10 @@ export function TaskTable({
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            onClick={() => onDelete(task)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDelete(task);
+                            }}
                             aria-label="Delete task"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -251,8 +280,9 @@ export function TaskTable({
           return (
             <div
               key={task.id}
+              onClick={() => onView?.(task)}
               className={cn(
-                "rounded-lg border bg-card p-4 space-y-3 shadow-xs",
+                "rounded-lg border bg-card p-4 space-y-3 shadow-xs cursor-pointer hover:border-primary/50 transition-colors group",
                 overdue && "border-rose-300 bg-rose-50/50 dark:border-rose-900 dark:bg-rose-950/20"
               )}
             >
@@ -261,16 +291,31 @@ export function TaskTable({
                   {overdue && (
                     <AlertCircle className="h-4 w-4 text-rose-500 shrink-0" />
                   )}
-                  <h3 className="font-semibold text-sm truncate text-foreground">
+                  <h3 className="font-semibold text-sm truncate text-foreground group-hover:text-primary transition-colors">
                     {task.title}
                   </h3>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 text-muted-foreground"
-                    onClick={() => onEdit(task)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onView?.(task);
+                    }}
+                    aria-label="View task details"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(task);
+                    }}
                     aria-label="Edit task"
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -279,7 +324,10 @@ export function TaskTable({
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                    onClick={() => onDelete(task)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(task);
+                    }}
                     aria-label="Delete task"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -293,7 +341,10 @@ export function TaskTable({
                 </p>
               )}
 
-              <div className="flex items-center justify-between pt-1">
+              <div
+                className="flex items-center justify-between pt-1"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Select
                   value={task.status}
                   onValueChange={(val) =>

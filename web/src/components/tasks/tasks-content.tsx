@@ -6,6 +6,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { TaskTable } from "./task-table";
 import { TaskFormDialog } from "./task-form-dialog";
 import { DeleteTaskDialog } from "./delete-task-dialog";
+import { TaskDetailDialog } from "./task-detail-dialog";
 import { TaskFilters } from "./task-filters";
 import { TaskSearch } from "./task-search";
 import { Pagination } from "@/components/shared/pagination";
@@ -23,6 +24,7 @@ export function TasksContent() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deletingTask, setDeletingTask] = useState<Task | null>(null);
+  const [viewingTask, setViewingTask] = useState<Task | null>(null);
 
   // Sync debounced search with query params
   useEffect(() => {
@@ -38,7 +40,7 @@ export function TasksContent() {
             Tasks
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Manage, organize, and track your daily tasks and deliverables.
+            Manage, organize, and track your daily tasks and deliverables. Click any row to view complete details.
           </p>
         </div>
 
@@ -87,6 +89,7 @@ export function TasksContent() {
         <TaskTable
           tasks={tasks?.data ?? []}
           loading={loading}
+          onView={(task) => setViewingTask(task)}
           onEdit={(task) => setEditingTask(task)}
           onDelete={(task) => setDeletingTask(task)}
           onRefresh={refresh}
@@ -106,6 +109,16 @@ export function TasksContent() {
           </div>
         )}
       </div>
+
+      {/* Task Detail Dialog (View Task Fully) */}
+      <TaskDetailDialog
+        task={viewingTask}
+        open={Boolean(viewingTask)}
+        onOpenChange={(open) => !open && setViewingTask(null)}
+        onEdit={(task) => setEditingTask(task)}
+        onDelete={(task) => setDeletingTask(task)}
+        onRefresh={refresh}
+      />
 
       {/* Create Dialog */}
       <TaskFormDialog

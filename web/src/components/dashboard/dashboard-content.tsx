@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { TaskStatusBadge } from "@/components/tasks/task-status-badge";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
+import { TaskDetailDialog } from "@/components/tasks/task-detail-dialog";
+import { DeleteTaskDialog } from "@/components/tasks/delete-task-dialog";
 import {
   Plus,
   CheckCircle2,
@@ -44,6 +46,9 @@ export function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [viewingTask, setViewingTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [deletingTask, setDeletingTask] = useState<Task | null>(null);
 
   const fetchTasks = useCallback(async () => {
     setLoading(true);
@@ -231,7 +236,7 @@ export function DashboardContent() {
                 Recent Tasks
               </CardTitle>
               <CardDescription className="text-xs">
-                Latest updates and created tasks
+                Click any task to view full details
               </CardDescription>
             </div>
             <Button variant="ghost" size="sm" asChild className="h-8 text-xs gap-1 text-primary">
@@ -266,17 +271,19 @@ export function DashboardContent() {
                   return (
                     <div
                       key={task.id}
+                      onClick={() => setViewingTask(task)}
                       className={cn(
-                        "flex items-center justify-between py-3 gap-3 first:pt-0 last:pb-0",
-                        overdue && "bg-rose-50/30 dark:bg-rose-950/10 px-2 -mx-2 rounded-md"
+                        "flex items-center justify-between py-3 gap-3 first:pt-0 last:pb-0 cursor-pointer rounded-md px-2 -mx-2 hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors group",
+                        overdue && "bg-rose-50/30 dark:bg-rose-950/10"
                       )}
+                      title="Click to view full details"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           {overdue && (
                             <AlertCircle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
                           )}
-                          <p className="text-sm font-medium text-foreground truncate">
+                          <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
                             {task.title}
                           </p>
                         </div>
@@ -357,10 +364,36 @@ export function DashboardContent() {
         </Card>
       </div>
 
+      {/* Task Detail Dialog (View Task Fully) */}
+      <TaskDetailDialog
+        task={viewingTask}
+        open={Boolean(viewingTask)}
+        onOpenChange={(open) => !open && setViewingTask(null)}
+        onEdit={(task) => setEditingTask(task)}
+        onDelete={(task) => setDeletingTask(task)}
+        onRefresh={fetchTasks}
+      />
+
       {/* Reusable Create Task Dialog */}
       <TaskFormDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
+        onSuccess={fetchTasks}
+      />
+
+      {/* Edit Dialog */}
+      <TaskFormDialog
+        open={Boolean(editingTask)}
+        onOpenChange={(open) => !open && setEditingTask(null)}
+        task={editingTask}
+        onSuccess={fetchTasks}
+      />
+
+      {/* Delete Confirmation AlertDialog */}
+      <DeleteTaskDialog
+        open={Boolean(deletingTask)}
+        onOpenChange={(open) => !open && setDeletingTask(null)}
+        task={deletingTask}
         onSuccess={fetchTasks}
       />
     </div>
